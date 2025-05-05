@@ -1,0 +1,123 @@
+<h2 style="text-align: center;">Calculateur de consommation de sel pour adoucisseur Kinetico Premier Plus XP</h2>
+
+<div style="max-width: 400px; margin: 0 auto;">
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+
+    <div style="display: flex; flex-direction: column;">
+      <label style="margin-bottom: 5px;">Dureté de l'eau brute :</label>
+      <div style="display: flex; gap: 10px;">
+        <input type="number" id="dureteEauPlus" style="padding: 6px; width: 50%; box-sizing: border-box;" placeholder="ex: 300">
+        <select id="uniteDuretePlus" style="padding: 6px; width: 50%; box-sizing: border-box;">
+          <option value="mgL">mg/L CaCO₃</option>
+          <option value="french">°f (français)</option>
+          <option value="german">°d (allemand)</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column;">
+      <label for="nbPersonnesPlus" style="margin-bottom: 5px;">Nombre de personnes :</label>
+      <select id="nbPersonnesPlus" style="padding: 6px; width: 100%;">
+        <option value="1">1 personne</option>
+        <option value="2">2 personnes</option>
+        <option value="3" selected>3 personnes</option>
+        <option value="4">4 personnes</option>
+        <option value="5">5 personnes</option>
+        <option value="6">6 personnes</option>
+        <option value="7">7 personnes</option>
+      </select>
+    </div>
+
+    <div style="text-align: center; margin-top: 10px;">
+      <button id="calculerSelPlus" style="background-color: #0D7EBC; color: white; border: none; padding: 8px 16px; border-radius: 5px; cursor: pointer; width: 160px;">
+        Calculer
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<h3 style="text-align: center;">Résultats :</h3>
+<p id="resultatSelPlus" style="text-align: center; margin: 10px 0;"></p>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const CONSOMMATION_PAR_PERSONNE_L_PAR_JOUR_PLUS = 100;
+  const JOURS_PAR_AN_PLUS = 365;
+  const SEL_PAR_REGEN_KG_PLUS = 0.56;
+  const POIDS_SAC_SEL_PLUS = 25;
+  const DURETE_RESIDUELLE_PLUS = 60;
+
+  function convertirEnMgLPlus(valeur, unite) {
+    switch (unite) {
+      case 'french': return valeur * 10;
+      case 'german': return valeur * 17.8;
+      case 'mgL': return valeur;
+      default: return valeur;
+    }
+  }
+
+  function getVolumeParCyclePlus(dureteMgL) {
+    if (dureteMgL <= 207) return 1583;
+    if (dureteMgL <= 231) return 1480;
+    if (dureteMgL <= 238) return 1377;
+    if (dureteMgL <= 256) return 1274;
+    if (dureteMgL <= 279) return 1171;
+    if (dureteMgL <= 305) return 1068;
+    if (dureteMgL <= 337) return 965;
+    if (dureteMgL <= 376) return 862;
+    if (dureteMgL <= 416) return 759;
+    if (dureteMgL <= 456) return 708;
+    if (dureteMgL <= 490) return 656;
+    if (dureteMgL <= 531) return 605;
+    if (dureteMgL <= 578) return 552;
+    if (dureteMgL <= 635) return 500;
+    if (dureteMgL <= 686) return 450;
+    if (dureteMgL <= 770) return 399;
+    if (dureteMgL <= 878) return 347;
+    return 224;
+  }
+
+  document.getElementById('calculerSelPlus').addEventListener('click', function() {
+    let dureteInput = parseFloat(document.getElementById('dureteEauPlus').value);
+    let nbPersonnes = parseInt(document.getElementById('nbPersonnesPlus').value);
+    let unite = document.getElementById('uniteDuretePlus').value;
+
+    const resultat = document.getElementById('resultatSelPlus');
+
+    if (isNaN(dureteInput) || isNaN(nbPersonnes)) {
+      resultat.innerText = "Veuillez remplir correctement tous les champs.";
+      return;
+    }
+
+    let dureteMgL = convertirEnMgLPlus(dureteInput, unite);
+
+    if (dureteMgL > 810) {
+      resultat.innerText = "La dureté maximale autorisée est de 810 mg/L.";
+      return;
+    }
+
+    let dureteTraitee = dureteMgL - DURETE_RESIDUELLE_PLUS;
+
+    if (dureteTraitee <= 0) {
+      resultat.innerText = "La dureté brute doit être supérieure à 60 mg/L.";
+      return;
+    }
+
+    let volumeParCycle = getVolumeParCyclePlus(dureteMgL);
+    let consommationAnL = nbPersonnes * CONSOMMATION_PAR_PERSONNE_L_PAR_JOUR_PLUS * JOURS_PAR_AN_PLUS;
+    let consommationAnM3 = consommationAnL / 1000;
+    let nbRegenAn = consommationAnL / volumeParCycle;
+    let selAnKg = nbRegenAn * SEL_PAR_REGEN_KG_PLUS;
+    let sacsSelAn = Math.ceil(selAnKg / POIDS_SAC_SEL_PLUS);
+
+    resultat.innerHTML = `
+      <strong style="color: #0D7EBC;">Paramètres utilisés :</strong><br>
+      - Volume d'eau estimé : 100 L/personne/jour (total : ${consommationAnM3.toFixed(1)} m³/an)<br>
+      - Dureté résiduelle recommandée : 60 mg/L CaCO₃<br><br>
+      <strong style="color: #0D7EBC;">Consommation de sel estimée :</strong><br><br>
+      - Environ ${sacsSelAn} sacs de 25 kg par an (${selAnKg.toFixed(1)} kg)
+    `;
+  });
+});
+</script>
